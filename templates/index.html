@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Internet Speed Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body {
+        font-family: "Arial", sans-serif;
+      }
+      .bubble-button {
+        display: inline-block;
+        background-color: #3b82f6;
+        color: white;
+        padding: 12px 24px;
+        border-radius: 9999px;
+        margin: 8px;
+        text-align: center;
+        cursor: pointer;
+        transition: background-color 0.3s, transform 0.3s;
+      }
+      .bubble-button:hover {
+        background-color: #2563eb;
+        transform: scale(1.05);
+      }
+      .heading {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #000;
+        margin-bottom: 16px;
+        text-align: center;
+      }
+      .result-text {
+        color: black;
+      }
+      #externalIp {
+        transition: border-color 0.3s, box-shadow 0.3s;
+      }
+
+      #externalIp:hover {
+        border-color: #3b82f6; /* Blue border on hover */
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3); /* Blue shadow on hover */
+      
+    }
+      .box-container {
+        max-width: 450px; /* Smaller horizontal width */
+        margin: 0 auto;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div class="container p-4 box-container">
+      <div class="heading">Internet Speed Test</div>
+      <div
+        class="bg-white p-4 rounded shadow mx-auto flex flex-col items-center"
+      >
+        <div class="flex flex-wrap justify-center mb-4">
+          <div class="bubble-button" id="downloadTest">Download Speed</div>
+          <div class="bubble-button" id="uploadTest">Upload Speed</div>
+          <div class="bubble-button" id="bothTest">Both</div>
+        </div>
+        <div class="mb-4 text-center">
+          <div class="bubble-button" id="getIpInfo">Get My IP Info</div>
+        </div>
+        <div class="flex items-center mb-4">
+          <input
+            id="externalIp"
+            type="text"
+            placeholder="Enter external IP"
+            class="border border-gray-300 p-2 rounded mr-2"
+          />
+          <div class="bubble-button" id="getExternalIpInfo">
+            Get External IP Info
+          </div>
+        </div>
+        <div id="speedResults" class="mt-4 text-center result-text"></div>
+        <div id="ipResults" class="mt-4 text-center result-text"></div>
+      </div>
+    </div>
+
+    <script>
+      const speedResults = document.getElementById("speedResults");
+      const ipResults = document.getElementById("ipResults");
+
+      async function performSpeedTest(type) {
+        speedResults.innerHTML = "Testing...";
+        try {
+          const response = await axios.post("/speed_test", { type });
+          const results = response.data;
+          let html = '<ul class="list-disc list-inside">';
+          if (results.download)
+            html += `<li>Download: ${results.download} Mbps</li>`;
+          if (results.upload) html += `<li>Upload: ${results.upload} Mbps</li>`;
+          html += `<li>Ping: ${results.ping} ms</li>`;
+          html += "</ul>";
+          speedResults.innerHTML = html;
+        } catch (error) {
+          speedResults.innerHTML = "Error performing speed test";
+        }
+      }
+
+      document
+        .getElementById("downloadTest")
+        .addEventListener("click", () => performSpeedTest("download"));
+      document
+        .getElementById("uploadTest")
+        .addEventListener("click", () => performSpeedTest("upload"));
+      document
+        .getElementById("bothTest")
+        .addEventListener("click", () => performSpeedTest("both"));
+
+      document
+        .getElementById("getIpInfo")
+        .addEventListener("click", async () => {
+          ipResults.innerHTML = "Loading...";
+          try {
+            const response = await axios.get("/ip_info");
+            const info = response.data;
+            ipResults.innerHTML = `
+                    <ul class="list-disc list-inside">
+                        <li>IP: ${info.ip}</li>
+                        <li>Country: ${info.country}</li>
+                        <li>Country Code: ${info.countryCode}</li>
+                        <li>City: ${info.city}</li>
+                        <li>Region: ${info.region}</li>
+                    </ul>
+                `;
+          } catch (error) {
+            ipResults.innerHTML = "Error getting IP information";
+          }
+        });
+
+      document
+        .getElementById("getExternalIpInfo")
+        .addEventListener("click", async () => {
+          const ip = document.getElementById("externalIp").value;
+          if (!ip) {
+            alert("Please enter an IP address");
+            return;
+          }
+          ipResults.innerHTML = "Loading...";
+          try {
+            const response = await axios.post("/external_ip_info", { ip });
+            const info = response.data;
+            ipResults.innerHTML = `
+                    <ul class="list-disc list-inside">
+                        <li>IP: ${info.ip}</li>
+                        <li>Country: ${info.country}</li>
+                        <li>Country Code: ${info.countryCode}</li>
+                        <li>City: ${info.city}</li>
+                        <li>Region: ${info.region}</li>
+                    </ul>
+                `;
+          } catch (error) {
+            ipResults.innerHTML = "Error getting external IP information";
+          }
+        });
+    </script>
+  </body>
+</html>
